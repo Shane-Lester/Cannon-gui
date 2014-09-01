@@ -1,5 +1,6 @@
 #www.stuffaboutcode.com
 #Raspberry Pi, Minecraft Cannon
+#first add a delay and count down to allow you to get back into minecraft
 
 #import the minecraft.py module from the minecraft directory
 import minecraft.minecraft as minecraft
@@ -11,6 +12,12 @@ import time
 import math
 #import cmd, so we can use the command line interpreter
 import cmd
+
+#import pyside and prepare the GUI
+from PySide.QtCore import *
+from PySide.QtGui import *
+import sys
+
 
 #Common functions
 # compares vec3 objects, if they are the same returns true
@@ -235,6 +242,17 @@ class MinecraftBullet:
 
         #Draw the bullet
         self.drawPos = startPos
+        self.mc.postToChat("Firing in -5")
+        time.sleep(1)
+        self.mc.postToChat("4")
+        time.sleep(1)
+        self.mc.postToChat("3")
+        time.sleep(1)
+        self.mc.postToChat("2")
+        time.sleep(1)
+        self.mc.postToChat("1")
+        time.sleep(1)
+        
         self.draw()
         
     def draw(self):
@@ -387,7 +405,74 @@ class CannonCommands(cmd.Cmd):
 
     def do_EOF(self, line):
         return True
+        
+#class to manage the GUI
+class Gui(QWidget):
+    def __init__(self):
+        super(Gui,self).__init__()
+        self.firebutton=QPushButton("Fire",self)
+        self.tilt_spin=QSpinBox()
+        self.rotate_spin=QSpinBox()
+        self.rotate_button=QPushButton("Rotate",self)
+        self.tilt_button=QPushButton("Tilt",self)
+        self.start=QPushButton("Start",self)
+        self.exit=QPushButton("Exit",self)
+        
+        self.controlsLayout=QGridLayout()
+        self.controlsLayout.addWidget(self.firebutton,0,3)
+        self.controlsLayout.addWidget(self.start,0,0)
+        self.controlsLayout.addWidget(self.exit,0,1)
+        self.controlsLayout.addWidget(self.tilt_spin,1,0)
+        self.controlsLayout.addWidget(self.tilt_button,1,1)
+        
+        self.controlsLayout.addWidget(self.rotate_spin,1,2)
+        self.controlsLayout.addWidget(self.rotate_button,1,3)
+        self.setLayout(self.controlsLayout)
+        
+        self.tilt_spin.setRange(0,90)
+        self.tilt_spin.setSingleStep(1)
+        self.tilt_spin.setValue(45)
+        self.rotate_spin.setRange(0,360)
+        self.rotate_spin.setSingleStep(1)
+        self.rotate_spin.setValue(0)	
+        
+        self.start.clicked.connect(self.do_start)
+        self.exit.clicked.connect(self.do_exit)
+        self.firebutton.clicked.connect(self.do_fire)
+        self.rotate_button.clicked.connect(self.do_rotate)
+        self.tilt_button.clicked.connect(self.do_tilt)
+        
+    
+    
+    def do_start(self):
+        self.mc=minecraft.Minecraft.create()
+        playerPos = self.mc.player.getTilePos()
+        self.cannon = MinecraftCannon(self.mc, minecraft.Vec3(playerPos.x + 3, playerPos.y, playerPos.z))
+        
+    def do_exit(self):
+        self.cannon.clearCannon()
+        
+    def do_tilt(self):
+        self.cannon.setAngle(int(self.tilt_spin.value()))
+        
+    def do_rotate(self):
+        self.cannon.setDirection(int(self.rotate_spin.value()))
+    
+    def do_fire(self):   
+        bullet = self.cannon.fire(1, 3)
+        while(bullet.update()):
+            time.sleep(0.01)
+      
+    
+        
 
 #main program
 if __name__ == "__main__":
-    CannonCommands().cmdloop()
+    #CannonCommands().cmdloop()
+    app=QApplication(sys.argv)
+    control_window=Gui()
+    control_window.show()
+    
+    #enter Qt loop
+    app.exec_()
+    sys.exit()
