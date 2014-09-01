@@ -1,6 +1,8 @@
 #www.stuffaboutcode.com
 #Raspberry Pi, Minecraft Cannon
+#Editted by Shane Lester 
 #first add a delay and count down to allow you to get back into minecraft
+#then added a Qt GUI
 
 #import the minecraft.py module from the minecraft directory
 import minecraft.minecraft as minecraft
